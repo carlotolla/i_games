@@ -16,6 +16,7 @@ Caverna é um jogo de aventuras em uma caverna.
 CAVEX = "https://dl.dropboxusercontent.com/u/1751704/labase/caverna/img/cavernax.jpg"
 CAVEY = "https://dl.dropboxusercontent.com/u/1751704/labase/caverna/img/cavernay.jpg"
 TUNEIS = [(int(a), int(b)) for a, b in "01 02 03 14 15 25 26 36 34 47 57 67".split()]
+TUNEL, CAMARA = "Tunel%s", "Camara%s"
 
 
 class Caverna:
@@ -25,21 +26,26 @@ class Caverna:
         """Inicializa Caverna. """
         self.doc = gui.DOC
         self.html = gui.HTML
-        self.camara = {}
-        self.tunel = {}
-        self.heroi = self.caverna = self.sala = None
+        self.sala = {}
+        self.heroi = self.caverna = self.ambiente = self.local = None
         self.main = self.doc['main']
 
     def cria_caverna(self):
         """Cria a caverna e suas partes."""
         self.caverna = self.html.DIV(Id="caverna", display='none')
-        self.sala = self.html.DIV(Id="sala")
-        self.camara = {camara: Camara(self.html, self.caverna, camara) for camara in range(8)}
-        self.tunel = {tunel: Tunel(self.html, self.caverna, tunel) for tunel in TUNEIS}
-        self.sala <= self.camara[0].camara
-        self.main <= self.sala
+        self.ambiente = self.html.DIV(Id="sala")
+        self.sala = {CAMARA % str(camara): Camara(self.html, self.caverna, camara) for camara in range(8)}
+        self.sala.update({TUNEL % str(tunel): Tunel(self.html, self.caverna, tunel) for tunel in TUNEIS})
+        self.local = self.sala[CAMARA % str(0)]
+        self.ambiente <= self.local.camara
+        self.main <= self.ambiente
 
         return self
+
+    def entra(self, destino):
+        self.caverna <= self.local
+        self.local = self.camara[destino]
+        self.sala <= self.local.camara
 
 
 class Camara:
@@ -48,31 +54,33 @@ class Camara:
     def __init__(self, gui, caverna, nome):
         """Inicializa Camara. """
         self.html, self.caverna, self.nome = gui, caverna, nome
-        self.camara = self.cria_sala()
-        self.tuneis = self.html.DIV(Id="tuneis%d" % nome)
-        self.camara <= self.tuneis
-        self.tunel = [self.cria_tunel(tunel) for tunel in TUNEIS if nome in tunel]
+        self.camara = self.cria_sala(nome=CAMARA % str(self.nome), cave=CAVEX)
+        self.saidas = self.html.DIV(Id="Saidas%s" % str(nome))
+        self.camara <= self.saidas
+        self.saida = [self.cria_saida(saida) for saida in TUNEIS if nome in saida]
 
-    def cria_sala(self):
-        """Cria a camara e suas partes."""
-        nome = "camara%d" % self.nome
+    def cria_sala(self, nome, cave):
+        """Cria sala e suas partes."""
+        nome = CAMARA % str(self.nome)
         estilo = dict(
             width=1000, height=800,
-            background='url(%s)' % CAVEX)
+            background='url(%s)' % cave)
         self.camara = self.html.DIV(nome, Id=nome, style=estilo)
         self.camara.style.backgroundSize = 'cover'
         self.caverna <= self.camara
         return self.camara
 
-    def cria_tunel(self, tunel):
+    def cria_saida(self, saida):
         """Cria tuneis ligados nesta caverna."""
-        nome = "tunel%s" % str(tunel)
+        def entra_saida(evento):
+            self.caverna.entra(evento.target.Id)
+        nome = TUNEL % str(saida)
         print('tunel', nome)
         estilo = dict(
             width="33.33%", height=550, Float="left")
-        self.tunel = self.html.DIV(nome, Id=nome, style=estilo)
-        self.tuneis <= self.tunel
-        return self.tunel
+        saida = self.html.DIV(nome, Id=nome, style=estilo)
+        self.saidas <= saida
+        return saida
 
 
 class Tunel:
@@ -81,18 +89,29 @@ class Tunel:
     def __init__(self, gui, camara, nome):
         """Inicializa Tunel. """
         self.html, self.caverna, self.nome = gui, camara, nome
-        self.camara = self.cria_sala()
+        self.camara = self.cria_sala(nome=TUNEL % str(self.nome), cave=CAVEY)
 
-    def cria_sala(self):
+    def cria_sala(self, nome, cave):
         """Cria tunel e suas partes."""
-        nome = "camara%s" % str(self.nome)
         estilo = dict(
             width=1000, height=800,
-            background='url(%s)' % CAVEY)
+            background='url(%s)' % cave)
         self.camara = self.html.DIV(nome, Id=nome, style=estilo)
         self.camara.style.backgroundSize = 'cover'
         self.caverna <= self.camara
         return self.camara
+
+    def cria_saida(self, saida):
+        """Cria tuneis ligados nesta caverna."""
+        def entra_saida(evento):
+            self.caverna.entra(evento.target.Id)
+        nome = CAMARA % str(saida)
+        print('tunel', nome)
+        estilo = dict(
+            width="50%", height=550, Float="left")
+        saida = self.html.DIV(nome, Id=nome, style=estilo)
+        self.saidas <= saida
+        return saida
 
 
 def main(gui):
