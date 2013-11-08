@@ -15,7 +15,8 @@ Caverna é um jogo de aventuras em uma caverna.
 """
 SAIDAS_S = "Saidas%s"
 CAVEX = "https://dl.dropboxusercontent.com/u/1751704/labase/caverna/img/cavernax.jpg"
-CAVEY = "https://dl.dropboxusercontent.com/u/1751704/labase/caverna/img/cavernay.jpg"
+CAVEY = "https://dl.dropboxusercontent.com/u/1751704/labase/caverna/img/cavernaz.jpg"
+MUSH = "https://dl.dropboxusercontent.com/u/1751704/labase/caverna/img/cogumelo.png"
 TUNEIS = [(int(a), int(b)) for a, b in "01 02 03 14 15 25 26 36 34 47 57 67".split()]
 CAMARAS = range(8)
 TUNEL, CAMARA = "Tunel%s", "Camara%s"
@@ -58,18 +59,19 @@ class Sala:
     def __init__(self, gui, caverna, nome):
         """Inicializa Camara. """
         self.html, self.caverna, self.nome = gui, caverna, nome
-        self.camara = self.saida = None
+        self.camara = self.saida = self.cogumelo = None
         self.saidas = self.html.DIV(Id=SAIDAS_S % str(nome))
         self.monta_ambiente(nome)
         self.camara <= self.saidas
+        self.camara <= self.cogumelo
 
     def cria_sala(self, nome, cave):
         """Cria sala e suas partes."""
         nome = CAMARA % str(self.nome)
-        estilo = dict(
-            width=1000, height=800,
-            background='url(%s)' % cave)
+        estilo = dict(width=1000, height=800, background='url(%s)' % cave)
         self.camara = self.html.DIV(nome, Id=nome, style=estilo)
+        estilo = dict(width=50, height=50, background='url(%s) 100%% 100%% / cover' % MUSH, Float="left")
+        self.cogumelo = self.html.DIV(Id='mush_'+nome, style=estilo)
         self.camara.style.backgroundSize = 'cover'
         #self.caverna <= self.camara
         return self.camara
