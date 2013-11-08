@@ -13,9 +13,11 @@ Caverna - Principal
 
 Caverna é um jogo de aventuras em uma caverna.
 """
+SAIDAS_S = "Saidas%s"
 CAVEX = "https://dl.dropboxusercontent.com/u/1751704/labase/caverna/img/cavernax.jpg"
 CAVEY = "https://dl.dropboxusercontent.com/u/1751704/labase/caverna/img/cavernay.jpg"
 TUNEIS = [(int(a), int(b)) for a, b in "01 02 03 14 15 25 26 36 34 47 57 67".split()]
+CAMARAS = range(8)
 TUNEL, CAMARA = "Tunel%s", "Camara%s"
 
 
@@ -34,8 +36,8 @@ class Caverna:
         """Cria a caverna e suas partes."""
         self.caverna = self.html.DIV(Id="caverna", display='none')
         self.ambiente = self.html.DIV(Id="sala")
-        self.sala = {CAMARA % str(camara): Camara(self.html, self.caverna, camara) for camara in range(8)}
-        self.sala.update({TUNEL % str(tunel): Tunel(self.html, self.caverna, tunel) for tunel in TUNEIS})
+        self.sala = {CAMARA % str(camara): Camara(self.html, self, camara) for camara in CAMARAS}
+        self.sala.update({TUNEL % str(tunel): Tunel(self.html, self, tunel) for tunel in TUNEIS})
         self.local = self.sala[CAMARA % str(0)]
         self.ambiente <= self.local.camara
         self.main <= self.ambiente
@@ -43,21 +45,23 @@ class Caverna:
         return self
 
     def entra(self, destino):
-        self.caverna <= self.local
-        self.local = self.camara[destino]
-        self.sala <= self.local.camara
+        self.caverna <= self.local.camara
+        self.local = self.sala[destino]
+        self.ambiente <= self.local.camara
 
 
-class Camara:
-    """Uma camara da caverna. :ref:`camara`
-    """
+class Sala:
+    def monta_ambiente(self, nome):
+        self.camara = self.cria_sala(nome=CAMARA % str(self.nome), cave=CAVEX)
+        self.saida = [self.cria_saida(saida) for saida in TUNEIS if nome in saida]
+
     def __init__(self, gui, caverna, nome):
         """Inicializa Camara. """
         self.html, self.caverna, self.nome = gui, caverna, nome
-        self.camara = self.cria_sala(nome=CAMARA % str(self.nome), cave=CAVEX)
-        self.saidas = self.html.DIV(Id="Saidas%s" % str(nome))
+        self.camara = self.saida = None
+        self.saidas = self.html.DIV(Id=SAIDAS_S % str(nome))
+        self.monta_ambiente(nome)
         self.camara <= self.saidas
-        self.saida = [self.cria_saida(saida) for saida in TUNEIS if nome in saida]
 
     def cria_sala(self, nome, cave):
         """Cria sala e suas partes."""
@@ -67,51 +71,37 @@ class Camara:
             background='url(%s)' % cave)
         self.camara = self.html.DIV(nome, Id=nome, style=estilo)
         self.camara.style.backgroundSize = 'cover'
-        self.caverna <= self.camara
+        #self.caverna <= self.camara
         return self.camara
 
-    def cria_saida(self, saida):
+    def cria_saida(self, saida, tunel=TUNEL, width="33.33%"):
         """Cria tuneis ligados nesta caverna."""
         def entra_saida(evento):
             self.caverna.entra(evento.target.Id)
-        nome = TUNEL % str(saida)
-        print('tunel', nome)
+        nome = tunel % str(saida)
+        print('saida', nome)
         estilo = dict(
-            width="33.33%", height=550, Float="left")
+            width=width, height=550, Float="left")
         saida = self.html.DIV(nome, Id=nome, style=estilo)
+        saida.onclick = entra_saida
         self.saidas <= saida
         return saida
 
 
-class Tunel:
+class Camara(Sala):
     """Uma camara da caverna. :ref:`camara`
     """
-    def __init__(self, gui, camara, nome):
-        """Inicializa Tunel. """
-        self.html, self.caverna, self.nome = gui, camara, nome
+    def monta_ambiente(self, nome):
+        self.camara = self.cria_sala(nome=CAMARA % str(self.nome), cave=CAVEX)
+        self.saida = [self.cria_saida(saida) for saida in TUNEIS if nome in saida]
+
+
+class Tunel(Sala):
+    """Uma camara da caverna. :ref:`camara`
+    """
+    def monta_ambiente(self, nome):
         self.camara = self.cria_sala(nome=TUNEL % str(self.nome), cave=CAVEY)
-
-    def cria_sala(self, nome, cave):
-        """Cria tunel e suas partes."""
-        estilo = dict(
-            width=1000, height=800,
-            background='url(%s)' % cave)
-        self.camara = self.html.DIV(nome, Id=nome, style=estilo)
-        self.camara.style.backgroundSize = 'cover'
-        self.caverna <= self.camara
-        return self.camara
-
-    def cria_saida(self, saida):
-        """Cria tuneis ligados nesta caverna."""
-        def entra_saida(evento):
-            self.caverna.entra(evento.target.Id)
-        nome = CAMARA % str(saida)
-        print('tunel', nome)
-        estilo = dict(
-            width="50%", height=550, Float="left")
-        saida = self.html.DIV(nome, Id=nome, style=estilo)
-        self.saidas <= saida
-        return saida
+        self.saida = [self.cria_saida(saida, CAMARA, "50%") for saida in CAMARAS if saida in nome]
 
 
 def main(gui):
