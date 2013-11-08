@@ -14,6 +14,8 @@ Caverna - Principal
 Caverna é um jogo de aventuras em uma caverna.
 """
 CAVEX = "https://dl.dropboxusercontent.com/u/1751704/labase/caverna/img/cavernax.jpg"
+CAVEY = "https://dl.dropboxusercontent.com/u/1751704/labase/caverna/img/cavernay.jpg"
+ARESTAS = [[a, b] for a, b in "01 02 03 14 15 25 26 36 34 47 57 67".split()]
 
 
 class Caverna:
@@ -23,18 +25,40 @@ class Caverna:
         """Initializes builder and gui. """
         self.doc = gui.DOC
         self.html = gui.HTML
-        self.camera = {}
+        self.camara = {}
         self.tunel = {}
-        self.heroi = None
+        self.heroi = self.caverna = self.sala = None
         self.main = self.doc['main']
 
     def cria_caverna(self):
         """Cria a caverna e suas partes."""
-        self.main.style.backgroundSize = 'cover'
-        self.main.style.backgroundImage = 'url(%s)' % CAVEX
-        self.main.style.width = 1000
-        self.main.style.height = 800
+        self.caverna = self.html.DIV(Id="caverna", display='none')
+        self.sala = self.html.DIV(Id="sala")
+        self.camara = {camara: Camara(self.html, self.caverna, camara) for camara in range(8)}
+        self.sala <= self.camara[0].camara
+        self.main <= self.sala
+
         return self
+
+
+class Camara:
+    """Uma camara da caverna. :ref:`camara`
+    """
+    def __init__(self, gui, caverna, nome):
+        """Initializes builder and gui. """
+        self.html, self.caverna, self.nome = gui, caverna, nome
+        self.camara = self.cria_sala()
+
+    def cria_sala(self):
+        """Cria a camara e suas partes."""
+        nome = "camara%d" % self.nome
+        estilo = dict(
+            width=1000, height=800,
+            background='url(%s)' % CAVEX)
+        self.camara = self.html.DIV(nome, Id=nome, style=estilo)
+        self.camara.style.backgroundSize = 'cover'
+        self.caverna <= self.camara
+        return self.camara
 
 
 def main(gui):
