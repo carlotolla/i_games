@@ -7,12 +7,12 @@ Caverna - Principal
 :Contact: carlo@nce.ufrj.br
 :Date: 2013/11/04
 :Status: This is a "work in progress"
-:Revision: 0.1.3
 :Home: `Labase <http://labase.selfip.org/>`__
 :Copyright: 2013, `GPL <http://is.gd/3Udt>`__.
 
 Caverna é um jogo de aventuras em uma caverna.
 """
+__version__ = '0.1.3'
 SAIDAS_S = "Saidas%s"
 CAVEX = "https://dl.dropboxusercontent.com/u/1751704/labase/caverna/img/cavernax.jpg"
 CAVEY = "https://dl.dropboxusercontent.com/u/1751704/labase/caverna/img/cavernaz.jpg"
@@ -21,6 +21,7 @@ PACMAN = "https://dl.dropboxusercontent.com/u/1751704/labase/caverna/img/pacman.
 TUNEIS = [(int(a), int(b)) for a, b in "01 02 03 14 15 25 26 36 34 47 57 67".split()]
 CAMARAS = range(8)
 TUNEL, CAMARA = "Tunel%s", "Camara%s"
+MYID, MYPASS = 'private-pacman-cave', 'c4p6p7'
 
 
 class Caverna:
@@ -28,9 +29,32 @@ class Caverna:
     """
     def __init__(self, gui):
         """Inicializa Caverna. """
+        def envia(channel='move', **kwargs):
+            data = dict(to=MYID, CHANNEL_=channel, **kwargs)
+            self.pusher.send(gui.JSON.dumps(data))
+
+        def conecta():
+            self.pusher.send('{"setID":"' + MYID + '","passwd":"' + MYPASS + '"}')
+            self.send = envia
+            self.pusher.send('{"to":"' + MYID + '","msg":"' + 'init' + '"}')
+
+        def recebe(ev):
+            data = gui.JSON.loads(ev.data)
+            if 'SID' in data:
+                self.sid = data['SID']
+            if 'CHANNEL_' in data and data['sID'] != self.sid:
+                self.event[data['CHANNEL_']](data)
+            print('ev.data', ev.data)
+        self.herois = {}
+        self.send = self.cria_heroi = self.move_heroi = self.pega_item = lambda x: None
+        self.event = dict(move=self.move_heroi, cria=self.cria_heroi, pega=self.pega_item)
         self.doc = gui.DOC
         self.html = gui.HTML
         self.sala = {}
+        self.pusher = gui.WSK('ws://achex.ca:4010')
+        self.pusher.on_open = conecta
+        self.pusher.on_message = recebe
+
         self.heroi = self.caverna = self.ambiente = self.local = self.pontua = None
         self.main = self.doc['main']
 
@@ -94,7 +118,7 @@ class Sala:
         def entra_saida(evento):
             self.caverna.entra(evento.target.Id)
         nome = tunel % str(saida)
-        print('saida', nome)
+        #print('saida', nome)
         estilo = dict(
             width=width, height=550, Float="left")
         saida = self.html.DIV(nome, Id=nome, style=estilo)
@@ -120,5 +144,5 @@ class Tunel(Sala):
 
 
 def main(gui):
-    print('Caverna 0.1.0')
+    print('Caverna %s' % __version__)
     caverna = Caverna(gui).cria_caverna()
