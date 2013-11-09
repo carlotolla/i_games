@@ -21,7 +21,7 @@ PACMAN = "https://dl.dropboxusercontent.com/u/1751704/labase/caverna/img/pacman.
 TUNEIS = [(int(a), int(b)) for a, b in "01 02 03 14 15 25 26 36 34 47 57 67".split()]
 CAMARAS = range(8)
 TUNEL, CAMARA = "Tunel%s", "Camara%s"
-MYID, MYPASS = 'private-pacman-cave', 'c4p6p7'
+MYID, MYPASS, START = 'private-pacman-cave', 'c4p6p7', 'S_T_A_R_T__'
 
 
 class Caverna:
@@ -29,24 +29,32 @@ class Caverna:
     """
     def __init__(self, gui):
         """Inicializa Caverna. """
+        def nop(**kwargs):
+            pass
+
         def envia(channel='move', **kwargs):
             data = dict(to=MYID, CHANNEL_=channel, **kwargs)
+            print('envia', data)
             self.pusher.send(gui.JSON.dumps(data))
 
         def conecta():
             self.pusher.send('{"setID":"' + MYID + '","passwd":"' + MYPASS + '"}')
             self.send = envia
-            self.pusher.send('{"to":"' + MYID + '","msg":"' + 'init' + '"}')
+            self.pusher.send('{"to":"' + MYID + '","' + START + '":"' + START + '"}')
 
         def recebe(ev):
             data = gui.JSON.loads(ev.data)
             if 'SID' in data:
-                self.sid = data['SID']
-            if 'CHANNEL_' in data and data['sID'] != self.sid:
-                self.event[data['CHANNEL_']](data)
+                self.sid = str(data['SID'])
+            if START in data and data['to'] == MYID:
+                print('{"auth":"ok"}', data)
+                self.cria_caverna()
+            if 'CHANNEL_' in data and data['sID'] != str(self.sid):
+                print('CHANNEL_ in data', self.sid, data)
+                self.event[data['CHANNEL_']](**data)
             print('ev.data', ev.data)
         self.herois = {}
-        self.send = self.cria_heroi = self.move_heroi = self.pega_item = lambda x: None
+        self.send = self.pega_item = nop
         self.event = dict(move=self.move_heroi, cria=self.cria_heroi, pega=self.pega_item)
         self.doc = gui.DOC
         self.html = gui.HTML
@@ -66,27 +74,66 @@ class Caverna:
         self.sala = {CAMARA % str(camara): Camara(self.html, self, camara) for camara in CAMARAS}
         self.sala.update({TUNEL % str(tunel): Tunel(self.html, self, tunel) for tunel in TUNEIS})
         self.local = self.sala[CAMARA % str(0)]
-        estilo = dict(width=50, height=50, background='url(%s) 100%% 100%% / cover' % PACMAN, Float="left")
-        self.heroi = self.html.DIV(Id='heroi_', style=estilo)
+        self.heroi = self.cria_heroi(CAMARA % str(0), 'heroi', self.sid)
         self.ambiente <= self.local.camara
-        self.local.camara <= self.heroi
         self.main <= self.pontua
         self.main <= self.ambiente
 
         return self
 
+    def cria_heroi(self, camara='Camara0', nome='heroi', sID=None, **kwargs):
+        """Cria um heroi em uma sala da caverna."""
+        heroi = Heroi(self.html, self.sala[camara], nome)
+        self.herois[nome] = heroi
+        if sID == self.sid:
+            self.send(channel='cria', camara=camara, nome=nome)
+        else:
+            self.send(channel='cria', camara=self.heroi.local(), nome=self.heroi.nome)
+        return heroi
+
+    def move_heroi(self, camara='Camara0', nome='heroi', sID=None, **kwargs):
+        """Move um heroi em uma sala da caverna."""
+        self.herois[nome].move(self.sala[camara])
+        if sID == self.sid:
+            self.send(channel='move', camara=camara, nome=nome)
+
     def entra(self, destino):
+        """Entra em uma sala da caverna."""
         self.caverna <= self.local.camara
         self.local = self.sala[destino]
-        self.local.camara <= self.heroi
+        #self.local.camara <= self.heroi.heroi
+        self.move_heroi(camara=self.local.camara.Id, nome=self.heroi.nome)
         self.ambiente <= self.local.camara
 
     def pega(self, destino):
         self.pontua <= self.doc[destino]
 
 
+class Heroi:
+    """Um habitante da caverna. :ref:`heroi`
+    """
+    def __init__(self, gui, camara, nome):
+        """Inicializa Heroi. """
+        self.html, self.camara, self.nome = gui, camara, nome
+        estilo = dict(width=50, height=50, background='url(%s) 100%% 100%% / cover' % PACMAN, Float="left")
+        self.heroi = self.html.DIV(Id='heroi_', style=estilo)
+        self.camara.camara <= self.heroi
+
+    def local(self):
+        """Localiza Heroi. """
+        return self.camara.camara.Id
+
+    def move(self, camara):
+        """Localiza Heroi. """
+        self.camara = camara
+        self.camara.camara <= self.heroi
+
+
 class Sala:
+    """Um ambiente da caverna, seja tunel ou camara. :ref:`sala`
+    """
     def monta_ambiente(self, nome):
+        """Monta sala e suas saidas."""
         self.camara = self.cria_sala(nome=CAMARA % str(self.nome), cave=CAVEX)
         self.saida = [self.cria_saida(saida) for saida in TUNEIS if nome in saida]
 
@@ -103,7 +150,7 @@ class Sala:
         """Cria sala e suas partes."""
         def pega_objeto(evento):
             self.caverna.pega(evento.target.Id)
-        nome = CAMARA % str(self.nome)
+        #nome = CAMARA % str(self.nome)
         estilo = dict(width=1000, height=800, background='url(%s)' % cave)
         self.camara = self.html.DIV(nome, Id=nome, style=estilo)
         estilo = dict(width=50, height=50, background='url(%s) 100%% 100%% / cover' % MUSH, Float="left")
@@ -136,7 +183,7 @@ class Camara(Sala):
 
 
 class Tunel(Sala):
-    """Uma camara da caverna. :ref:`camara`
+    """Um tunel ligando duas camaras da caverna. :ref:`tunel`
     """
     def monta_ambiente(self, nome):
         self.camara = self.cria_sala(nome=TUNEL % str(self.nome), cave=CAVEY)
@@ -145,4 +192,4 @@ class Tunel(Sala):
 
 def main(gui):
     print('Caverna %s' % __version__)
-    caverna = Caverna(gui).cria_caverna()
+    caverna = Caverna(gui)  # .cria_caverna()
