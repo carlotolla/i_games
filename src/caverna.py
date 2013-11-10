@@ -40,14 +40,12 @@ class Caverna:
         def conecta():
             self.pusher.send('{"setID":"' + MYID + '","passwd":"' + MYPASS + '"}')
             self.send = envia
-            self.pusher.send('{"to":"' + MYID + '","' + START + '":"' + START + '"}')
+            #self.pusher.send('{"to":"' + MYID + '","' + START + '":"' + START + '"}')
 
         def recebe(ev):
             data = gui.JSON.loads(ev.data)
             if 'SID' in data:
                 self.sid = str(data['SID'])
-            if START in data and data['to'] == MYID:
-                print('{"auth":"ok"}', data)
                 self.cria_caverna()
             if 'CHANNEL_' in data and data['sID'] != str(self.sid):
                 print('CHANNEL_ in data', self.sid, data)
@@ -74,22 +72,25 @@ class Caverna:
         self.sala = {CAMARA % str(camara): Camara(self.html, self, camara) for camara in CAMARAS}
         self.sala.update({TUNEL % str(tunel): Tunel(self.html, self, tunel) for tunel in TUNEIS})
         self.local = self.sala[CAMARA % str(0)]
-        self.heroi = self.cria_heroi(CAMARA % str(0), 'heroi', self.sid)
+        self.heroi = self.cria_heroi(CAMARA % str(0), None, self.sid)
         self.ambiente <= self.local.camara
         self.main <= self.pontua
         self.main <= self.ambiente
 
         return self
 
-    def cria_heroi(self, camara='Camara0', nome='heroi', sID=None, **kwargs):
+    def cria_heroi(self, camara='Camara0', nome=None, sID=None, **kwargs):
         """Cria um heroi em uma sala da caverna."""
-        heroi = Heroi(self.html, self.sala[camara], nome)
-        self.herois[nome] = heroi
-        if sID == self.sid:
-            self.send(channel='cria', camara=camara, nome=nome)
-        else:
-            self.send(channel='cria', camara=self.heroi.local(), nome=self.heroi.nome)
-        return heroi
+        nome = nome or 'h' + self.sid
+        if nome not in self.herois:
+            heroi = Heroi(self.html, self.sala[camara], nome)
+            self.herois[nome] = heroi
+            if sID == self.sid:
+                #self.heroi = heroi
+                self.send(channel='cria', camara=camara, nome=nome)
+            else:
+                self.send(channel='cria', camara=self.heroi.local(), nome=self.heroi.nome)
+            return heroi
 
     def move_heroi(self, camara='Camara0', nome='heroi', sID=None, **kwargs):
         """Move um heroi em uma sala da caverna."""
@@ -102,7 +103,7 @@ class Caverna:
         self.caverna <= self.local.camara
         self.local = self.sala[destino]
         #self.local.camara <= self.heroi.heroi
-        self.move_heroi(camara=self.local.camara.Id, nome=self.heroi.nome)
+        self.move_heroi(camara=self.local.camara.Id, nome=self.heroi.nome, sID=self.sid)
         self.ambiente <= self.local.camara
 
     def pega(self, destino):
@@ -115,8 +116,9 @@ class Heroi:
     def __init__(self, gui, camara, nome):
         """Inicializa Heroi. """
         self.html, self.camara, self.nome = gui, camara, nome
-        estilo = dict(width=50, height=50, background='url(%s) 100%% 100%% / cover' % PACMAN, Float="left")
-        self.heroi = self.html.DIV(Id='heroi_', style=estilo)
+        estilo = dict(width=50, height=50, background='url(%s) 100%% 100%% / cover' % PACMAN,
+                      Float="left")
+        self.heroi = self.html.DIV(nome, Id=nome, style=estilo)
         self.camara.camara <= self.heroi
 
     def local(self):
