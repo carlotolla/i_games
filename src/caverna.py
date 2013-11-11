@@ -13,6 +13,8 @@ Caverna - Principal
 Caverna é um jogo de aventuras em uma caverna.
 """
 __version__ = '0.1.3'
+ALTURA = 600
+PISO = 350
 SAIDAS_S = "Saidas%s"
 CAVEX = "https://dl.dropboxusercontent.com/u/1751704/labase/caverna/img/cavernax.jpg"
 CAVEY = "https://dl.dropboxusercontent.com/u/1751704/labase/caverna/img/cavernaz.jpg"
@@ -51,8 +53,10 @@ class Caverna:
                 print('CHANNEL_ in data', self.sid, data)
                 self.event[data['CHANNEL_']](**data)
             print('ev.data', ev.data)
+        self.heroi = self.caverna = self.ambiente = self.local = self.pontua = None
+        self.sid = ''
         self.herois = {}
-        self.send = self.pega_item = nop
+        self.send = nop
         self.event = dict(move=self.move_heroi, cria=self.cria_heroi, pega=self.pega_item)
         self.doc = gui.DOC
         self.html = gui.HTML
@@ -61,20 +65,19 @@ class Caverna:
         self.pusher.on_open = conecta
         self.pusher.on_message = recebe
 
-        self.heroi = self.caverna = self.ambiente = self.local = self.pontua = None
         self.main = self.doc['main']
 
     def cria_caverna(self):
         """Cria a caverna e suas partes."""
         self.caverna = self.html.DIV(Id="caverna", display='none')
         self.ambiente = self.html.DIV(Id="sala")
-        self.pontua = self.html.DIV(Id="pontua", style=dict(width="100%", height=50))
+        #self.pontua = self.html.DIV(Id="pontua", style=dict(width="100%", height=50))
         self.sala = {CAMARA % str(camara): Camara(self.html, self, camara) for camara in CAMARAS}
         self.sala.update({TUNEL % str(tunel): Tunel(self.html, self, tunel) for tunel in TUNEIS})
         self.local = self.sala[CAMARA % str(0)]
         self.heroi = self.cria_heroi(CAMARA % str(0), None, self.sid)
         self.ambiente <= self.local.camara
-        self.main <= self.pontua
+        self.main <= self.heroi.mochila
         self.main <= self.ambiente
 
         return self
@@ -106,8 +109,17 @@ class Caverna:
         self.move_heroi(camara=self.local.camara.Id, nome=self.heroi.nome, sID=self.sid)
         self.ambiente <= self.local.camara
 
-    def pega(self, destino):
-        self.pontua <= self.doc[destino]
+    def pega_item(self, item=None, nome=None, sID=None, **kwargs):
+        print('pega_item', item, nome, sID)
+        self.herois[nome].pega(self.doc[item])
+        if sID == self.sid:
+            self.send(channel='pega', item=item, nome=nome)
+
+    def pega(self, item):
+        heroi, sid, it = self.heroi.nome, self.sid, item
+        print('pega', it, heroi, sid)
+        self.pega_item(item=it, nome=heroi, sID=sid)
+        #self.pega_item(item, self.heroi.nome, self.sid)
 
 
 class Heroi:
@@ -119,6 +131,7 @@ class Heroi:
         estilo = dict(width=50, height=50, background='url(%s) 100%% 100%% / cover' % PACMAN,
                       Float="left")
         self.heroi = self.html.DIV(nome, Id=nome, style=estilo)
+        self.mochila = self.html.DIV(Id="pontua", style=dict(width="100%", height=50))
         self.camara.camara <= self.heroi
 
     def local(self):
@@ -126,9 +139,13 @@ class Heroi:
         return self.camara.camara.Id
 
     def move(self, camara):
-        """Localiza Heroi. """
+        """Movimenta Heroi. """
         self.camara = camara
         self.camara.camara <= self.heroi
+
+    def pega(self, item):
+        """Localiza Heroi. """
+        self.mochila <= item
 
 
 class Sala:
@@ -151,14 +168,15 @@ class Sala:
     def cria_sala(self, nome, cave):
         """Cria sala e suas partes."""
         def pega_objeto(evento):
+            print('pega_objeto', evento.target.Id)
             self.caverna.pega(evento.target.Id)
         #nome = CAMARA % str(self.nome)
-        estilo = dict(width=1000, height=800, background='url(%s)' % cave)
+        estilo = dict(width=1000, height=ALTURA, background='url(%s) 100%% 100%% / cover' % cave)
         self.camara = self.html.DIV(nome, Id=nome, style=estilo)
         estilo = dict(width=50, height=50, background='url(%s) 100%% 100%% / cover' % MUSH, Float="left")
         self.cogumelo = self.html.DIV(Id='mush_'+nome, style=estilo)
         self.cogumelo.onclick = pega_objeto
-        self.camara.style.backgroundSize = 'cover'
+        #self.camara.style.backgroundSize = 'cover'
         #self.caverna <= self.camara
         return self.camara
 
@@ -169,7 +187,7 @@ class Sala:
         nome = tunel % str(saida)
         #print('saida', nome)
         estilo = dict(
-            width=width, height=550, Float="left")
+            width=width, height=PISO, Float="left")
         saida = self.html.DIV(nome, Id=nome, style=estilo)
         saida.onclick = entra_saida
         self.saidas <= saida
