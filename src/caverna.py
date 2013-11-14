@@ -60,6 +60,7 @@ class Caverna:
         self.event = dict(move=self.move_heroi, cria=self.cria_heroi, pega=self.pega_item)
         self.doc = gui.DOC
         self.html = gui.HTML
+        self.gui = gui
         self.sala = {}
         self.pusher = gui.WSK('ws://achex.ca:4010')
         self.pusher.on_open = conecta
@@ -75,7 +76,8 @@ class Caverna:
         self.sala = {CAMARA % str(camara): Camara(self.html, self, camara) for camara in CAMARAS}
         self.sala.update({TUNEL % str(tunel): Tunel(self.html, self, tunel) for tunel in TUNEIS})
         self.local = self.sala[CAMARA % str(0)]
-        self.heroi = self.cria_heroi(CAMARA % str(0), None, self.sid)
+        nome_heroi = self.gui().prom('Diga o nome do seu heroi (max 6 letras):', 'h%s' % self.sid)
+        self.heroi = self.cria_heroi(CAMARA % str(0), nome_heroi, self.sid)
         self.ambiente <= self.local.camara
         self.main <= self.heroi.mochila
         self.main <= self.ambiente
@@ -130,7 +132,9 @@ class Heroi:
         self.html, self.camara, self.nome = gui, camara, nome
         estilo = dict(width=50, height=50, background='url(%s) 100%% 100%% / cover' % PACMAN,
                       Float="left")
-        self.heroi = self.html.DIV(nome, Id=nome, style=estilo)
+        self.heroi = self.html.DIV(Id=nome, style=estilo)
+        hero_name = self.html.SPAN(nome, style=dict(position='relative', top=30))
+        self.heroi <= hero_name
         self.mochila = self.html.DIV(Id="pontua", style=dict(width="100%", height=50))
         self.camara.camara <= self.heroi
 
