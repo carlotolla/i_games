@@ -20,6 +20,7 @@ CAVEX = "https://dl.dropboxusercontent.com/u/1751704/labase/caverna/img/cavernax
 CAVEY = "https://dl.dropboxusercontent.com/u/1751704/labase/caverna/img/cavernaz.jpg"
 MUSH = "https://dl.dropboxusercontent.com/u/1751704/labase/caverna/img/cogumelo.png"
 PACMAN = "https://dl.dropboxusercontent.com/u/1751704/labase/caverna/img/pacman.png"
+MONSTER = "https://dl.dropboxusercontent.com/u/1751704/labase/caverna/img/pinky.png"
 TUNEIS = [(int(a), int(b)) for a, b in "01 02 03 14 15 25 26 36 34 47 57 67".split()]
 CAMARAS = range(8)
 TUNEL, CAMARA = "Tunel%s", "Camara%s"
@@ -53,7 +54,7 @@ class Caverna:
                 print('CHANNEL_ in data', self.sid, data)
                 self.event[data['CHANNEL_']](**data)
             print('ev.data', ev.data)
-        self.heroi = self.caverna = self.ambiente = self.local = self.pontua = None
+        self.monster = self.heroi = self.caverna = self.ambiente = self.local = self.pontua = None
         self.sid = ''
         self.herois = {}
         self.send = nop
@@ -65,6 +66,7 @@ class Caverna:
         self.pusher = gui.WSK('ws://achex.ca:4010')
         self.pusher.on_open = conecta
         self.pusher.on_message = recebe
+        self.habitante = [Monstro, Heroi]
 
         self.main = self.doc['main']
 
@@ -76,6 +78,7 @@ class Caverna:
         self.sala = {CAMARA % str(camara): Camara(self.html, self, camara) for camara in CAMARAS}
         self.sala.update({TUNEL % str(tunel): Tunel(self.html, self, tunel) for tunel in TUNEIS})
         self.local = self.sala[CAMARA % str(0)]
+        self.monster = self.cria_heroi(CAMARA % str(0), "@#$%s" % self.sid, self.sid, False)
         nome_heroi = self.gui().prom('Diga o nome do seu heroi (max 6 letras):', 'h%s' % self.sid)
         self.heroi = self.cria_heroi(CAMARA % str(0), nome_heroi, self.sid)
         self.ambiente <= self.local.camara
@@ -84,17 +87,22 @@ class Caverna:
 
         return self
 
-    def cria_heroi(self, camara='Camara0', nome=None, sID=None, **kwargs):
+    def cria_heroi(self, camara='Camara0', nome=None, sID=None, tipo=True, **kwargs):
         """Cria um heroi em uma sala da caverna."""
         nome = nome or 'h' + self.sid
         if nome not in self.herois:
-            heroi = Heroi(self.html, self.sala[camara], nome)
+            heroi = self.habitante[tipo](self.html, self.sala[camara], nome)
             self.herois[nome] = heroi
             if sID == self.sid:
                 #self.heroi = heroi
-                self.send(channel='cria', camara=camara, nome=nome)
+                self.send(channel='cria', camara=camara, nome=nome, tipo=tipo)
             else:
-                self.send(channel='cria', camara=self.heroi.local(), nome=self.heroi.nome)
+                if tipo:
+                    print('cria_heroi, tipo, self.heroi, self.sid, sID', tipo, self.heroi, self.sid, sID)
+                    self.send(channel='cria', camara=self.heroi.local(), nome=self.heroi.nome, tipo=tipo)
+                else:
+                    print('cria_heroi, tipo, self.heroi, self.sid, sID', tipo, self.heroi, self.sid, sID)
+                    self.send(channel='cria', camara=self.monster.local(), nome=self.monster.nome, tipo=tipo)
             return heroi
 
     def move_heroi(self, camara='Camara0', nome='heroi', sID=None, **kwargs):
@@ -132,11 +140,11 @@ class Heroi:
         self.html, self.camara, self.nome = gui, camara, nome
         estilo = dict(width=50, height=50, background='url(%s) 100%% 100%% / cover' % PACMAN,
                       Float="left")
-        self.heroi = self.html.DIV(Id=nome, style=estilo)
+        self.div = self.html.DIV(Id=nome, style=estilo)
         hero_name = self.html.SPAN(nome, style=dict(position='relative', top=30))
-        self.heroi <= hero_name
+        self.div <= hero_name
         self.mochila = self.html.DIV(Id="pontua", style=dict(width="100%", height=50))
-        self.camara.camara <= self.heroi
+        self.camara.camara <= self.div
 
     def local(self):
         """Localiza Heroi. """
@@ -145,7 +153,32 @@ class Heroi:
     def move(self, camara):
         """Movimenta Heroi. """
         self.camara = camara
-        self.camara.camara <= self.heroi
+        self.camara.camara <= self.div
+
+    def pega(self, item):
+        """Localiza Heroi. """
+        self.mochila <= item
+
+
+class Monstro:
+    """Um monstro que assombra a caverna. :ref:`monstro`
+    """
+    def __init__(self, gui, camara, nome):
+        """Inicializa Heroi. """
+        self.html, self.camara, self.nome = gui, camara, nome
+        estilo = dict(width=50, height=50, background='url(%s) 100%% 100%% / cover' % MONSTER,
+                      Float="left", opacity=0.6)
+        self.div = self.html.DIV(Id=nome, style=estilo)
+        self.camara.camara <= self.div
+
+    def local(self):
+        """Localiza Heroi. """
+        return self.camara.camara.Id
+
+    def move(self, camara):
+        """Movimenta Heroi. """
+        self.camara = camara
+        self.camara.camara <= self.div
 
     def pega(self, item):
         """Localiza Heroi. """
