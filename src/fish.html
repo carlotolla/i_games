@@ -1,12 +1,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"><!--
 
 ############################################################
-Caverna - Um jogo de Aventura em uma Caverna
+Fish - An adventure in the bottom of the sea
 ############################################################
 
 :Author: *Carlo E. T. Oliveira*
 :Contact: carlo@nce.ufrj.br
-:Date: 2013/11/04
+:Date: 2013/11/29
 :Status: This is a "work in progress"
 :Revision: 0.1.0
 :Home: `Labase <http://labase.selfip.org/>`__
@@ -18,15 +18,14 @@ Caverna - Um jogo de Aventura em uma Caverna
         <title>Caverna</title>
         <meta http-equiv="content-type" content="application/xml;charset=utf-8" />
         <script type="text/javascript" src="https://dl.dropboxusercontent.com/u/1751704/labase/lib/brython.js"></script>
-        <script type="text/python" src="caverna.py">
+        <script type="text/javascript" src="https://dl.dropboxusercontent.com/u/1751704/labase/three/three.min.js"></script>
+        <script type="text/python" src="fishing.py">
         </script>
-        <style>
-            @keyframes monster{
-                from {left: 1000;}
-                to {left:0;}
-            }
-        </style>
         <script type="text/python">
+cameraC = JSConstructor( THREE.PerspectiveCamera )
+camera = cameraC( 75, 1, 1, 10000 )
+camera.position.z = 1000;
+
             from local_storage import storage
             import json
             import svg
@@ -41,7 +40,7 @@ Caverna - Um jogo de Aventura em uma Caverna
                     return alert(question)
                 def prom(self, question, text):
                     return prompt(question, text)
-            main(Brython)
+            #main(Brython)
         </script>
     </head>
     <body onLoad="brython(1)">

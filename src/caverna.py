@@ -25,6 +25,7 @@ TUNEIS = [(int(a), int(b)) for a, b in "01 02 03 14 15 25 26 36 34 47 57 67".spl
 CAMARAS = range(8)
 TUNEL, CAMARA = "Tunel%s", "Camara%s"
 MYID, MYPASS, START = 'private-pacman-cave', 'c4p6p7', 'S_T_A_R_T__'
+from random import randint
 
 
 class Caverna:
@@ -167,9 +168,15 @@ class Monstro:
         """Inicializa Heroi. """
         self.html, self.camara, self.nome = gui, camara, nome
         estilo = dict(width=50, height=50, background='url(%s) 100%% 100%% / cover' % MONSTER,
-                      Float="left", opacity=0.6)
+                      position="absolute", left=950, top=PISO, opacity=0.6, animation="monster 4s linear")
+        #Float="left", opacity=0.6)
         self.div = self.html.DIV(Id=nome, style=estilo)
         self.camara.camara <= self.div
+
+    def muda(self, ev=0):
+        """Muda Heroi. """
+        nova_sala = randint(len(self.camara.saidas))
+        self.move(self.camara.saidas[nova_sala])
 
     def local(self):
         """Localiza Heroi. """
@@ -196,7 +203,7 @@ class Sala:
     def __init__(self, gui, caverna, nome):
         """Inicializa Camara. """
         self.html, self.caverna, self.nome = gui, caverna, nome
-        self.camara = self.saida = self.cogumelo = None
+        self.camara = self.saida = self.cogumelo = self.sombras = None
         self.saidas = self.html.DIV(Id=SAIDAS_S % str(nome))
         self.monta_ambiente(nome)
         self.camara <= self.saidas
@@ -216,6 +223,15 @@ class Sala:
         #self.camara.style.backgroundSize = 'cover'
         #self.caverna <= self.camara
         return self.camara
+
+    def cria_sombras(self, nome, cave):
+        """Cria sombras de salas para monstros."""
+        perto = [[y for y in x if y != 0][0] for x in TUNEIS if 0 in x]
+        medio = [[y for y in x if y not in perto][0] for x in TUNEIS if x[0] in perto or x[1] in perto and not 0 in x]
+        longe = [[y for y in x if y not in medio][0] for x in TUNEIS if x[0] in medio or x[1] in medio and not 0 in x]
+
+        estilo = dict(width=1000, height=50)
+        self.sombras = [self.html.DIV(Id='sombra%d' % d, style=estilo) for d in range(3)]
 
     def cria_saida(self, saida, tunel=TUNEL, width="33.33%"):
         """Cria tuneis ligados nesta caverna."""
