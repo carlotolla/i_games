@@ -15,32 +15,36 @@ Fish - An adventure in the bottom of the sea
 <html>
     <head>
         <meta charset="UTF-8">
-        <title>Caverna</title>
+        <title>Fishing Safari</title>
         <meta http-equiv="content-type" content="application/xml;charset=utf-8" />
-        <script type="text/javascript" src="https://dl.dropboxusercontent.com/u/1751704/labase/lib/brython.js"></script>
+        <script type="text/javascript" src="https://dl.dropboxusercontent.com/u/1751704/labase/brython3/brython.js"></script>
         <script type="text/javascript" src="https://dl.dropboxusercontent.com/u/1751704/labase/three/three.min.js"></script>
-        <script type="text/python" src="fishing.py">
-        </script>
+        <script type="text/python" src="fishing.py"></script>
         <script type="text/python">
-cameraC = JSConstructor( THREE.PerspectiveCamera )
-camera = cameraC( 75, 1, 1, 10000 )
-camera.position.z = 1000;
-
-            from local_storage import storage
+            """
+            from browser import local_storage
+            from browser import timer
+            from browser import websocket
+            from browser import ajax
             import json
-            import svg
-            import html
-            import time
+            """
+            from browser import svg
+            from browser import html
+            from browser import doc
+            from browser import win
             class Brython:
-                DOC, SVG, HTML, AJAX, WIN = doc, svg, html, ajax, win
-                STORAGE, JSON, TIME, WSK = storage, json, time, websocket
+                THR = THREE
+                DOC, SVG, HTML, WIN = doc, svg, html,win
+                JSCons, JSObj = JSConstructor, JSObject
+                #STORAGE, JSON, TIME, AJAX, WSK = local_storage, json, timer,  ajax, websocket
                 def conf(self, question):
                     return confirm(question)
                 def aler(self, question):
                     return alert(question)
                 def prom(self, question, text):
                     return prompt(question, text)
-            #main(Brython)
+            main(Brython, JSConstructor)
+            #animate(0)
         </script>
     </head>
     <body onLoad="brython(1)">

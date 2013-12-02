@@ -14,74 +14,45 @@ Fishing is a photo safari in the deeps of the ocean.
 """
 __version__ = '0.1.0'
 
-print('start ...')
 
-# -------------------------------------------
-# ISSUE 1 - is it possible to make this work?
-# -------------------------------------------
-# this doesnt work:
-# _THREE=JSObject(THREE)
-# camera = _THREE.PerspectiveCamera( 75, 1, 1, 10000 )
-# this does work:
-cameraC = JSConstructor( THREE.PerspectiveCamera )
-camera = cameraC( 75, 1, 1, 10000 )
-camera.position.z = 1000;
+class Aquarium:
+    def __init__(self, bry, _cons):
+        self.bry = bry
+        #print(bry, dir(bry))
+        cameraC = _cons(bry.THR.PerspectiveCamera)
+        self.camera = cameraC(75, 1, 1, 10000)
+        self.camera.position.z = 1000
 
-sceneC = JSConstructor( THREE.Scene );
-scene = sceneC();
+        sceneC = _cons(bry.THR.Scene)
+        self.scene = sceneC()
 
-geometryC = JSConstructor(THREE.CubeGeometry)
-geometry = geometryC(200, 200, 200)
-materialC = JSConstructor( THREE.MeshBasicMaterial )
+        geometryC = _cons(bry.THR.CubeGeometry)
+        geometry = geometryC(200, 200, 200)
+        materialC = _cons(bry.THR.MeshBasicMaterial)
+        material = materialC({"color": "0xff0000", "wireframe": True})
+        #material.color = "#FF0000"
+        #material.wireframe = True
 
-# -------------------------------------------
-# ISSUE 2 - how do I pass JSON as a parameter?
-# -------------------------------------------
-# this doesnt work:
-# material = materialC( { color: "0xff0000", wireframe: "true" } )
-# this does work:
-material = materialC()
-material.color = "#FF0000"
-material.wireframe = true
+        meshC = _cons(bry.THR.Mesh)
+        self.mesh = meshC(geometry, material)
+        self.scene.add(self.mesh)
 
-meshC = JSConstructor(THREE.Mesh)
-mesh = meshC( geometry, material )
-scene.add( mesh );
+        rendererC = _cons(bry.THR.CanvasRenderer)
+        self.renderer = rendererC()
+        self.renderer.setSize(444, 444)
+        bry.DOC['main'].appendChild(self.renderer.domElement)
+        self.renderer.render(self.scene, self.camera)
 
-rendererC = JSConstructor(THREE.CanvasRenderer)
-renderer = rendererC()
-renderer.setSize( 444,444);
+    def animate(self, i):
+        # note: bry.THR.js includes requestAnimationFrame shim
+        self.bry.WIN.requestAnimationFrame(self.animate)
 
+        self.mesh.rotation.x += 0.01
+        self.mesh.rotation.y += 0.02
 
-# -------------------------------------------
-# ISSUE 3 - How do I address the body of the page?
-# -------------------------------------------
-# this doesnt work:
-# doc['body'].appendChild(renderer.domElement)
-# this does work:
-doc['main'].appendChild(renderer.domElement)
-renderer.render( scene, camera )
+        self.renderer.render(self.scene, self.camera)
 
 
-# -------------------------------------------
-# ISSUE 4 - Why did I have to give one fake parameter to the callback function?
-# -------------------------------------------
-def animate(i):
-    # note: three.js includes requestAnimationFrame shim
-    requestAnimationFrame( animate );
-
-    mesh.rotation.x += 0.01;
-    mesh.rotation.y += 0.02;
-
-    renderer.render( scene, camera );
-
-    # -------------------------------------------
-    # ISSUE 5 - why is that called over and over again if I uncomment the next line?
-    # -------------------------------------------
-    # print('.. end.')
-pass
-
-
-def main(gui):
+def main(bry, _cons):
     print('Fishing %s' % __version__)
-    animate(0)
+    Aquarium(bry, _cons).animate(0)
