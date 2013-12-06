@@ -26,12 +26,13 @@ class Aquarium:
         sceneC = _cons(bry.THR.Scene)
         self.scene = sceneC()
 
-        geometryC = _cons(bry.THR.CubeGeometry)
-        geometry = geometryC(200, 200, 200)
-        materialC = _cons(bry.THR.MeshBasicMaterial)
-        material = materialC({"color": "0xff0000", "wireframe": True})
-        #material.color = "#FF0000"
-        #material.wireframe = True
+        geometry = _cons(bry.THR.CubeGeometry)(200, 200, 200)
+        material = _cons(bry.THR.MeshBasicMaterial)({"color": "#FF0000", "wireframe": True})
+        geometry = _cons(bry.THR.SphereGeometry)(200, 15, 15)
+        a = _cons(bry.THR.Vector3)(1, 1.2, 1.5)
+        scale = _cons(bry.THR.Matrix4)().makeScale(a)
+        geometry.applyMatrix(scale)
+        material = _cons(bry.THR.MeshBasicMaterial)({"color": "#FF0000", "wireframe": True})
 
         meshC = _cons(bry.THR.Mesh)
         self.mesh = meshC(geometry, material)
