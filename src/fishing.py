@@ -85,8 +85,8 @@ class WGLVisual:
 
         SCENE = self.scene = _cons(self._thr.Scene)()
         #self.camera.lookAt(self.scene.position)
-        self.renderer = _cons(self._thr.CanvasRenderer)()
-        #self.renderer = _cons(self._thr.WebGLRenderer)({"antialias": True})
+        #self.renderer = _cons(self._thr.CanvasRenderer)()
+        self.renderer = _cons(self._thr.WebGLRenderer)({"antialias": True})
         self.renderer.setSize(444, 444)
         bry.DOC['main'].appendChild(self.renderer.domElement)
         #bry.DOC['main'].style.background = "black"
@@ -117,7 +117,14 @@ class WGLVisual:
         def posit(x=0, y=0, z=0):
             element.position.x, element.position.y, element.position.z = int(x), int(y), int(z)
         posit(*pos)
-        raxis = lambda x, y, z: (at2(y, z), at2(x, z)+offrz, at2(x, y))
+        #raxis = lambda x, y, z: (at2(z, y), at2(z, x)+offrz, at2(y, x))
+        #raxis = lambda y, x, z: (at2(y, z), at2(x, z)+offrz, at2(x, y))
+        #raxis = lambda y, x, z: (at2(y, z), at2(z, x)+offrz, at2(x, y))
+        #raxis = lambda y, x, z: (at2(y, z), at2(z, x)+offrz, at2(x, y))
+
+        def raxis(y, x, z):
+            return (at2(y, z), at2(z, x)+offrz, at2(x, y))
+        print (raxis(*axis))
         element.rotation.x, element.rotation.y, element.rotation.z = raxis(*axis)
         element.scale = self._cons(self._thr.Vector3)(sx, sy, sz)
         frame = frame or self.scene
@@ -127,8 +134,11 @@ class WGLVisual:
     def vect(self, x, y, z):
         return self._cons(self._thr.Vector3)(x, y, z)
 
+    def face(self, x, y, z):
+        return self._cons(self._thr.Face3)(x, y, z)
+
     def box(self, length=100, width=100, height=100, **kwargs):
-        geometry = self._cons(self._thr.CubeGeometry)(length, width, height)
+        geometry = self._cons(self._thr.CubeGeometry)(length, height, width)
         return self.wglelement(geometry, **kwargs)
 
     def ring(self, radius=100, thickness=10, hor=10, vert=RES, **kwargs):
@@ -136,28 +146,14 @@ class WGLVisual:
         return self.wglelement(geometry, **kwargs)
 
     def pyramid(self, size=(100, 100, 100), base=4, top=0, **kwargs):
+        a, b, c = size
+        geometry = self._cons(self._thr.PyramidGeometry)(a, b, c)
+        return self.wglelement(geometry, **kwargs)
+
+    def npyramid(self, size=(100, 100, 100), base=4, top=0, **kwargs):
         geometry = self._cons(self._thr.CylinderGeometry)(top, size[0]/sqrt(2), size[1], base, false)
         aspect = size[2]/size[0]
         return self.wglelement(geometry, sx=aspect, sz=1/aspect, offrz=pi/4, **kwargs)
-
-    def npyramid(self, size=(100, 100, 100), base=4, top=0, **kwargs):
-        a, b, c = size
-        points = [
-            self.vect(a/2, b/2, 0),
-            self.vect(-a/2, -b/2, 0),
-            self.vect(-a/2, b/2, 0),
-            self.vect(a/2, -b/2, 0),
-            self.vect(0, 0, c)
-        ]
-        shape = geometry = self._cons(self._thr.ShapeGeometry)()
-        shape.moveTo(a/2, b/2, 0)
-        shape.moveTo(-a/2, -b/2, 0)
-        shape.moveTo(-a/2, b/2, 0)
-        shape.moveTo(a/2, -b/2, 0)
-        shape.moveTo(0, 0, c)
-        shape.close()
-        aspect = size[2]/size[0]
-        return self.wglelement(geometry, **kwargs)
 
     def cone(self, radius=50, height=100, base=RES, top=0, **kwargs):
         geometry = self._cons(self._thr.CylinderGeometry)(top, radius, height, base, false)
@@ -194,13 +190,13 @@ class Peixe(WGLVisual):
         self.labio_inferior = self.desenha_o_labio(eixo=EIXO_SE)
         self.olho_esquerdo = self.desenha_o_olho(l=t, d=(-t*0.7/PHI, t*1/PHI4, t*1.2/PHI4))
         self.olho_direito = self.desenha_o_olho(l=t, d=(-t*0.7/PHI, t*1/PHI4, -t*1.2/PHI4))
-        #self.barbatana_dorsal = self.desenha_a_barbatana(l=t, d=(-t*0.1/PHI, t*1/PHI4), eixo = EIXO_NE)
-        self.nadadeira_direita = self.desenha_a_nadadeira(l=t, d=(-t*0.2/PHI, -t*0.1/PHI4), eixo = EIXO_SSE)
+        self.barbatana_dorsal = self.desenha_a_barbatana(l=t, d=(-t*0.1/PHI, t*1/PHI4), eixo = EIXO_NE)
+        #self.nadadeira_direita = self.desenha_a_nadadeira(l=t, d=(-t*0.2/PHI, -t*0.1/PHI4), eixo = EIXO_SSE)
         #self.nadadeira_esquerda = self.desenha_a_nadadeira(l=t, d=(-t*0.2/PHI, -t*0.1/PHI4), eixo = EIXO_SSO)
     
-    def desenha_a_barbatana(self, l=1, eixo=(0, 0, 0), d=(0, 0)):
+    def desenha_a_barbatana(self, l=1, eixo=(0, 0, 0), d=(0, 0, 300)):
         return self.pyramid(
-            frame=self.esqueleto, size=(l, l/PHI, l/PHI4), pos=d, color=self.cor_cauda,  axis=eixo
+            frame=self.esqueleto, size=(l, int(l/PHI), int(l/PHI4)), pos=d, color=self.cor_cauda  # ,  axis=eixo
         )
     
     def desenha_a_nadadeira(self, l=1, eixo=(0, 0, 0), d=(0, 0)):
@@ -249,12 +245,25 @@ class Aquarium(WGLVisual):
         #floor.position.y = -1
         floor.rotation.x = pi / 2
         self.scene.add(floor)
-        self.box(frame=frame, pos=(300, -200, 200), length=200, width=200, height=100, color= Color.red)
-        self.pyramid(frame=frame, pos=(300, 0, 200), size=(200, 200, 100), color= Color.cyan)
-        self.ring(frame=frame, pos=(-100, -300, 200))
-        self.cone(frame=frame, pos=(200, -300, -200), radius=200, height=400)
-        self.ellipsoid(frame=frame, pos=(-300, 100, 200), length=300, width=170, height=150, color='#FFFF00', opacity=0.5)
-        self.mesho = self.ellipsoid(frame=frame, length=200, width=240, height=300, color='#FF0000')
+        self.box(frame=frame, pos=(0, 0, 0), length=200, width=200, height=200, color= Color.red)
+        self.pyramid(frame=frame, pos=(300, 0, 0), size=(300, 200, 200), color= Color.red, axis=(1, 0, 0))
+        self.pyramid(frame=frame, pos=(300, 300, 0), size=(300, 200, 200), color= Color.lime, axis=(1, 1, 0))
+        self.pyramid(frame=frame, pos=(0, 300, 0), size=(300, 200, 200), color= Color.cyan, axis=(0, 1, 0))
+        self.pyramid(frame=frame, pos=(-300, 300, 0), size=(300, 200, 200), color= Color.blue, axis=(-1, 1, 0))
+        self.pyramid(frame=frame, pos=(-300, 0, 0), size=(300, 200, 200), color= Color.navy, axis=(-1, 0, 0))
+        self.pyramid(frame=frame, pos=(0, -300, 0), size=(300, 200, 200), color= Color.green, axis=(0, -1, 0))
+        '''
+        self.pyramid(frame=frame, pos=(0, 0, -300), size=(300, 200, 200), color= Color.yellow, axis=(0, 0, -1))
+        self.pyramid(frame=frame, pos=(0, 0, 300), size=(300, 200, 200), color= Color.fuchsia, axis=(0, 0, 1))
+        '''
+        #self.pyramid(frame=frame, pos=(0, 200, 200), size=(300, 200, 250), color= Color.blue, axis=(1, 0, 0))
+        #self.pyramid(frame=frame, pos=(-400, 400, 200), size=(300, 200, 250), color= Color.green, axis=(1, 1, 0))
+        #self.pyramid(frame=frame, pos=(-200, 400, 200), size=(300, 200, 250), color= Color.green, axis=(1, 0, 1))
+        #self.pyramid(frame=frame, pos=(200, 400, 200), size=(300, 200, 250), color= Color.green, axis=(0, 1, 1))
+        #self.ring(frame=frame, pos=(-100, -300, 200))
+        #self.cone(frame=frame, pos=(200, -300, -200), radius=200, height=400)
+        #self.ellipsoid(frame=frame, pos=(-300, 100, 200), length=300, width=170, height=150, color='#FFFF00', opacity=0.5)
+        #self.mesho = self.ellipsoid(frame=frame, length=200, width=240, height=300, color='#FF0000')
         self.mesh = frame
 
     def animate(self, i):
@@ -269,6 +278,6 @@ class Aquarium(WGLVisual):
 
 def main(bry, _cons):
     print('Fishing %s' % __version__)
-    Aquarium(bry, _cons).animate(0)
-    #Aquarium(bry, _cons)
+    #Aquarium(bry, _cons).animate(0)
+    Aquarium(bry, _cons)
     #Peixe(bry, _cons).animate(0)
