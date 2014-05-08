@@ -79,7 +79,7 @@ class Blob:
         self.jail.toggle(self.blob[obind])
 
     def show(self, ablob):
-        self.blob.remove(ablob)
+        self.blob[self.blob.index(ablob)] = []
         for blob in self.blob:
             for part in blob:
                 part.visible = True
@@ -105,9 +105,6 @@ class Jail:
         #print (self.cell)
         self.hole = [gui.box(pos=cell, size=(CS-PD, CS-PD, CS-PD), color=color.gray(0.2), opacity=1)
                      for plane in self.cell for line in plane for cell in line]
-        self.hole[0].opacity = 0.5
-        self.hole[0].visible = False
-        self.hole[0].pos = vec(-2*CS, CS, CS)
 
         #print(color.blue, list(hole.opacity for hole in self.hole))
 
@@ -129,6 +126,7 @@ class Jail:
         for part in self.obj:
             part.pos = vec(*pos)  # objp
         obj.visible = False
+        self.loci[self.loci.index(pos)] = None
         self.show(self.obj)
         self.toggle(self.obj)
 
