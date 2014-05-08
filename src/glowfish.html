@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"><!--
+
+############################################################
+Glowfish - A 3D game as variation of tic-tac-toe
+############################################################
+
+:Author: *Carlo E. T. Oliveira*
+:Contact: carlo@nce.ufrj.br
+:Date: 2014/05/07
+:Status: This is a "work in progress"
+:Home: `Labase <http://labase.selfip.org/>`__
+:Copyright: 2014, `GPL <http://is.gd/3Udt>`__.
+
+In GlowFish you combine the properties of blobs to win.
+-->
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Fishing Safari</title>
+        <meta http-equiv="content-type" content="application/xml;charset=utf-8" />
+        <script type="text/javascript" src="../../lib/glow/brython_dist.js"></script>
+        <script type="text/python" src="glowfishing.py"></script>
+        <script type="text/python">
+            from glow import *
+            class GlowVisual:
+                def __init__(self):
+                    _gs=glow('glowscript')
+                    self.scene=canvas()
+                    self.scene.width = 1200
+                    self.scene.height = 600
+                    #self.gui = gui
+                    self.box = box
+                    self.pyramid = pyramid
+                    self.arrow = arrow
+                    self.cylinder = cylinder
+                    self.sphere = sphere
+                    self.cone = cone
+                    self.helix = helix
+                    self.compound = compound
+            main(GlowVisual(), vec, color)
+        </script>
+    </head>
+    <body onLoad="brython(1)">
+        <div id="glowscript" class="glowscript"></div>
+    </body>
+</html>
