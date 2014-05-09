@@ -1,0 +1,64 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"><!--
+
+############################################################
+WebShell - Um Gerenciador de Janelas ao estilo Gnome3
+############################################################
+
+:Author: *Carlo E. T. Oliveira*
+:Contact: carlo@nce.ufrj.br
+:Date: 2014/05/09
+:Status: This is a "work in progress"
+:Revision: 0.1.0
+:Home: `Labase <http://labase.selfip.org/>`__
+:Copyright: 2013, `GPL <http://is.gd/3Udt>`__.
+-->
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Activ WebShell</title>
+        <meta http-equiv="content-type" content="application/xml;charset=utf-8" />
+        <script type="text/javascript" src="../../lib/glow/brython_dist.js"></script>
+        <script type="text/python" src="webshell.py"></script>
+
+        <script type="text/javascript">
+            function launchFullscreen(element) {
+              if(element.requestFullscreen) {
+                element.requestFullscreen();
+              } else if(element.mozRequestFullScreen) {
+                element.mozRequestFullScreen();
+              } else if(element.webkitRequestFullscreen) {
+                element.webkitRequestFullscreen();
+              } else if(element.msRequestFullscreen) {
+                element.msRequestFullscreen();
+              }
+            }
+        </script>
+        <style>
+            @keyframes monster{
+                from {left: 1000;}
+                to {left:0;}
+            }
+        </style>
+        <script type="text/python">
+            from browser.local_storage import storage
+            from browser import doc, svg, html, ajax, win
+            from javascript import JSObject
+            class Brython:
+                DOC, SVG, HTML, AJAX, WIN = doc, svg, html, ajax, win
+                #STORAGE, JSON, TIME, WSK = storage, json, time, websocket
+                def conf(self, question):
+                    return confirm(question)
+                def aler(self, question):
+                    return alert(question)
+                def prom(self, question, text):
+                    return prompt(question, text)
+                def full(self):
+                    JSObject(launchFullscreen)(doc.documentElement)
+            main(Brython)
+        </script>
+    </head>
+    <body onLoad="brython(1)">
+        <div id="main">
+        </div>
+    </body>
+</html>
