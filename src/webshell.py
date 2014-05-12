@@ -20,16 +20,18 @@ STYLE = dict(
     launcher=".launcher {position: relative; left:0; float:top;"
              "padding:10; width:100%; max-width:50px;}",
     acti=".acti {position: absolute; left:0; float:left; width:16;}",
-    topb=".topb {position: absolute; top:0; width:100%; height:20; margin-bottom:30;}",
-    midp=".midp {position: absolute; top:0; width:100%; height:100%; overflow:hidden;}",
+    topb=".topb {position: absolute; top:0; height:20; margin-bottom:30;}",
+    midp=".midp {position: absolute; top:0; width:98%; height:100%; overflow:hidden;}",
     dash=".dash {position: absolute; left:0; float:left; width:100%; padding-top:15;"
          " transition: 0.1s linear left; max-width:80px;}",
-    dock=".dock {position: absolute; left:0; float:left; width:12%; padding-top:15;"
+    dock=".dock {position: absolute; left:0; float:left; width:8%; padding-top:15;"
          " transition: 0.1s linear left;}",
-    over=".over {position: relative; left:12%; top:30;  float:left; width:75%;"
+    over=".over {position: relative; left:10%; top:30;  float:left; width:74%;"
          " background-color: #b0b0b0;}",
-    work=".work {position: relative; left:0; float:right; width:13%; overflow:hidden;}",
+    work=".work {position: relative; left:0; float:right; width:15%; overflow:hidden;}",
     windock=".windock {position: relative; left:0; float:left; width:40%; height:40%;"
+         " margin:1%; overflow:hidden; border: 2px solid black; border-radius:4px;}",  # background-color:black")
+    workwin=".workwin {position: relative; left:0; float:left; width:auto; height:auto"
          " margin:1%; overflow:hidden; border: 2px solid black; border-radius:4px;}",  # background-color:black")
     workdock=".workdock {position: relative; left:0; float:left; width:90%; height:20%;"
          " margin:1%; overflow:hidden; border: 2px solid black; border-radius:4px;}",  # background-color:black")
@@ -108,7 +110,7 @@ class Tool(Window):
 
 class Window_Pool(Pane):
 
-    def __init__(self, gui, parent, class_name, action=lambda x: None, dock_class="windock"):
+    def __init__(self, gui, parent, class_name, action=lambda x: None, dock_class="workdock"):
         Pane.__init__(self, gui, parent, class_name)
         self.pool = []
         self.action, self.dock_class = action, dock_class
@@ -135,6 +137,19 @@ class Window_Pool(Pane):
         self.append(window)
 
 
+class Work_Pool(Window_Pool):
+
+    def __init__(self, gui, parent, class_name, action=lambda x: None, dock_class="windock"):
+        Window_Pool.__init__(self, gui, parent, class_name, action, dock_class)
+
+    def adjust_pool(self):
+        pass
+
+    def new(self, html):
+        window = Window_Pool(self.gui, self, self.dock_class, html, self.action)
+        self.append(window)
+
+
 class Dash:
 
     def dynamic_css_configuraion(self, gui):
@@ -143,6 +158,8 @@ class Dash:
         return html
 
     def build(self, gui, pool, wall):
+        wall.style.width = '100%'
+        wall.style.overflow = 'hidden'
         for icon in ICONS:
             #self.dash <= self.gui.HTML.IMG(src=icon, Class="launcher")
             Tool(gui, self.dash, "launcher", self.gui.HTML.IMG(src=icon, Class="launcher"), self.tool)
@@ -156,6 +173,15 @@ class Dash:
         self.top_dock <= activ
         activ.onclick = self.activ
 
+    def change_workspace(self, workspace):
+        self.desk <= workspace
+
+    def icons(self, dock):
+        self.window_pool.new(loads(HOME_CONTS)["result"])
+
+    def all(self, dock):
+        self.window_pool.new(loads(HOME_CONTS)["result"])
+
     def tool(self, dock):
         self.window_pool.new(loads(HOME_CONTS)["result"])
 
@@ -168,19 +194,19 @@ class Dash:
         self.gui = gui
         self.dock = None
         wall = self.wall = gui.DOC["main"]
-        wall.style.width = '100%'
         html = self.dynamic_css_configuraion(gui)
 
         mid = self.mid_pannel = Pane(gui, wall, "midp")
         #hide = self.hideout = Pane(gui)
         dock = self.dash_dock = Pane(gui, mid, "dock")
         self.dash = Pane(gui, dock, "dash")
-        pool = self.window_pool = Window_Pool(gui, mid, "over", self.select)
-        work = self.work_dock = Window_Pool(gui, mid, "work", self.select, "workdock")
+        desk = self.desk = Window(gui, mid, "over")
+        pool = self.window_pool = Window_Pool(gui, desk, "winwork", self.select)
+        work = self.work_dock = Work_Pool(gui, mid, "work", self.change_workspace)
         work.adjust_pool = lambda x=0: None
         self.desktop = Window(gui, wall, "desktop")
         self.top_dock = Pane(gui, wall, "topb")
-        self.build(gui, pool, mid)
+        self.build(gui, pool, wall)
 
     def _activ(self, event):
         #self.gui().full()
