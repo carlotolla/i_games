@@ -16,6 +16,32 @@ __version__ = '0.1.0'
 IBASE = "../../lib/icon/%s.svg"
 ICONS = [IBASE % icon for icon in "wiki blog mblog".split()]
 HOME = "https://activufrj.nce.ufrj.br/rest/wiki/carlo/home"
+STYLE = dict(
+    launcher=".launcher {position: relative; left:0; float:top;"
+             "padding:10; width:100%; max-width:50px;}",
+    acti=".acti {position: absolute; left:0; float:left; width:16;}",
+    topb=".topb {position: absolute; top:0; width:100%; height:20; margin-bottom:30;}",
+    midp=".midp {position: absolute; top:0; width:100%; height:100%; overflow:hidden;}",
+    dash=".dash {position: absolute; left:0; float:left; width:100%; padding-top:15;"
+         " transition: 0.1s linear left; max-width:80px;}",
+    dock=".dock {position: absolute; left:0; float:left; width:12%; padding-top:15;"
+         " transition: 0.1s linear left;}",
+    over=".over {position: relative; left:12%; top:30;  float:left; width:75%;"
+         " background-color: #b0b0b0;}",
+    work=".work {position: relative; left:0; float:right; width:13%; overflow:hidden;}",
+    windock=".windock {position: relative; left:0; float:left; width:40%; height:40%;"
+         " margin:1%; overflow:hidden; border: 2px solid black; border-radius:4px;}",  # background-color:black")
+    workdock=".workdock {position: relative; left:0; float:left; width:90%; height:20%;"
+         " margin:1%; overflow:hidden; border: 2px solid black; border-radius:4px;}",  # background-color:black")
+    nwindow=".nwindow {position: absolute; left:0; float:left; width:100%;"
+         " background-color: white; height:100%; margin:10px; overflow:scroll;}",
+    window=".window {margin:5px; width:auto; height:auto;"
+         " background-color: white; overflow:inherit;}",
+    desktop=".desktop {position: absolute; left:0; top:0; width:100%; height:100%; opacity:1;"
+         " background-color: white; overflow:inherit; transition: 0.4s linear left;}"
+
+)
+DOCKSIZES = [94, 94, 46, 30, 22, 17, 14, 11, 10]
 
 
 class Pane:
@@ -67,18 +93,45 @@ class Tool_Dock(Window_Dock):
     pass
 
 
+class Tool(Window):
+
+    def __init__(self, gui, parent, class_name, html='', action=lambda x: None):
+        #Pane.__init__(self, gui, parent, class_name)
+        self.element = html
+        parent and parent <= self.element
+        self.element.onclick = action  # self.select
+
+    def select(self, event):
+        print("select")
+        self.action(self)
+
+
 class Window_Pool(Pane):
 
-    def __init__(self, gui, parent, class_name, action=lambda x: None):
+    def __init__(self, gui, parent, class_name, action=lambda x: None, dock_class="windock"):
         Pane.__init__(self, gui, parent, class_name)
         self.pool = []
-        self.action = action
+        self.action, self.dock_class = action, dock_class
+
+    def adjust_pool(self):
+        side = int(len(self.pool) ** 0.5 + 0.999) % 9
+        width = "%d%%" % DOCKSIZES[side]
+        hside = int(len(self.pool) / side + 0.999) % 9
+        height = "%d%%" % (DOCKSIZES[hside] - 2)
+        #print (side, width, height, hside)
+        for win in self.pool:
+            win.element.style.width = width
+            win.element.style.height = height
 
     def append(self, window):
+        len_pool = len(self.pool)
+        if len_pool >= 36:
+            return True
         self.pool.append(window)
+        self.adjust_pool()
 
     def new(self, html):
-        window = Window_Dock(self.gui, self, "windock", html, self.action)
+        window = Window_Dock(self.gui, self, self.dock_class, html, self.action)
         self.append(window)
 
 
@@ -86,37 +139,25 @@ class Dash:
 
     def dynamic_css_configuraion(self, gui):
         html, header = gui.HTML, gui.DOC[gui.HTML.HEAD][0]
-        header <= html.STYLE(
-            ".launcher {position: relative; left:0; float:top;\
-            padding:10; width:100%;}")
-        header <= html.STYLE(".acti {position: absolute; left:0; float:left; width:16;}")
-        header <= html.STYLE(".topb {position: absolute; top:0; width:100%; height:20; margin-bottom:30;}")
-        header <= html.STYLE(".dock {position: absolute; left:0; float:left; width:60; padding-top:15;"
-                             " transition: 0.1s linear left;}")
-        header <= html.STYLE(".over {position: relative; left:80; top:30;  float:left; width:80%;"
-                             " background-color: #b0b0b0;}")
-        header <= html.STYLE(".wlist {position: relative; left:0; float:left; width:20%;}")
-        header <= html.STYLE(".windock {position: relative; left:0; float:left; width:40%; height:40%;"
-                             " margin:10px; overflow:hidden; border: 2px solid black; border-radius:4px;}")  # background-color:black")
-        header <= html.STYLE(".nwindow {position: absolute; left:0; float:left; width:100%;"
-                             " background-color: white; height:100%; margin:10px; overflow:scroll;}")
-        header <= html.STYLE(".window {margin:5px; width:auto; height:auto;"
-                             " background-color: white; overflow:inherit;}")
-        header <= html.STYLE(".desktop {position: absolute; left:0; top:0; width:100%; height:100%; opacity:1;"
-                             " background-color: white; overflow:inherit; transition: 0.4s linear left;}")
+        [header <= html.STYLE(style) for style in STYLE.values()]
         return html
 
     def build(self, gui, pool, wall):
         for icon in ICONS:
-            self.dash <= self.gui.HTML.IMG(src=icon, Class="launcher")
+            #self.dash <= self.gui.HTML.IMG(src=icon, Class="launcher")
+            Tool(gui, self.dash, "launcher", self.gui.HTML.IMG(src=icon, Class="launcher"), self.tool)
         self.hide_dash(None)
         #self.load(HOME)
         ct = loads(HOME_CONTS)
         for ind in range(4):
-            pool.new(ct["result"])
+            #pool.new(ct["result"])
+            self.work_dock.new(ct["result"])
         activ = html.IMG(src='https://activufrj.nce.ufrj.br/static/favicon.ico', Class="acti")
         self.top_dock <= activ
         activ.onclick = self.activ
+
+    def tool(self, dock):
+        self.window_pool.new(loads(HOME_CONTS)["result"])
 
     def select(self, dock):
         self.dock = dock
@@ -130,12 +171,13 @@ class Dash:
         wall.style.width = '100%'
         html = self.dynamic_css_configuraion(gui)
 
-        mid = self.mid_pannel = Pane(gui, wall, "topb")
-        mid.element.style.height = '100%'
+        mid = self.mid_pannel = Pane(gui, wall, "midp")
         #hide = self.hideout = Pane(gui)
         dock = self.dash_dock = Pane(gui, mid, "dock")
-        self.dash = Pane(gui, dock, "dock")
+        self.dash = Pane(gui, dock, "dash")
         pool = self.window_pool = Window_Pool(gui, mid, "over", self.select)
+        work = self.work_dock = Window_Pool(gui, mid, "work", self.select, "workdock")
+        work.adjust_pool = lambda x=0: None
         self.desktop = Window(gui, wall, "desktop")
         self.top_dock = Pane(gui, wall, "topb")
         self.build(gui, pool, mid)
@@ -150,7 +192,7 @@ class Dash:
     def show_dash(self, event):
         #self.dash_dock <= self.dash
         print("show_dash", self.dock)
-        self.desktop.element.style.left = 2000
+        self.desktop.element.style.display = "none"
         self.dash.element.style.left = 0
         self._activ = self.hide_dash
         self.dock and self.dock.refit()
@@ -159,7 +201,7 @@ class Dash:
         #self.hideout <= self.dash
         self.dash.element.style.left = -80
         self._activ = self.show_dash
-        self.desktop.element.style.left = 0
+        self.desktop.element.style.display = "block"
 
     def on_json_complete(self, req):
         if req.status == 200 or req.status == 0:
