@@ -150,7 +150,7 @@ class Work_Pool(Window_Pool):
         self.append(window)
 
 
-class Dash:
+class Screen:
 
     def dynamic_css_configuraion(self, gui):
         html, header = gui.HTML, gui.DOC[gui.HTML.HEAD][0]
@@ -250,7 +250,6 @@ class Dash:
 
 
 def main(gui):
-    #gui().full()
-    dash = Dash(gui)
+    dash = Screen(gui)
 
 HOME_CONTS=r'''{"status": 0, "result": {"pagina": "indice", "wikidata": {"data_cri": "2011-12-14 14:54:19.888003", "comentar": true, "tags": [], "registry_id": "carlo", "alterar": true, "apagar": false, "nomepag_id": "indice", "ler": true, "alterado_por": "carlo", "pag": "carlo/indice", "owner": "carlo", "conteudo": "<p><a href=\"/wiki/carlo/home\">P&aacute;gina Inicial<\/a><\/p>\r\n\r\n<p><a href=\"/wiki/carlo/Atividades\">Atividades<\/a><\/p>\r\n\r\n<p><a href=\"/wiki/carlo/Redes_Sociais\">Redes Sociais<\/a><\/p>\r\n\r\n<p><a href=\"/wiki/carlo/Ideias\">Ideias<\/a><\/p>\r\n\r\n<hr />\r\n<p><a href=\"/wiki/carlo/Pessoal\">Pessoal (privado)<\/a><\/p>\r\n\r\n<p><a href=\"/wiki/carlo/Game_Design\">Game Design<\/a><\/p>\r\n\r\n<p><a href=\"/wiki/carlo/Livros_no_Dominio_Publico\">Livros<\/a><\/p>\r\n\r\n<p><a href=\"/wiki/carlo/Jogos_Python\">Jogos<\/a><\/p>", "data_alt_fmt": "31/03/2014 \u00e0s 17:11", "data_alt": "2014-03-31 17:11:49.721490", "comentarios": [], "nomepag": "\u00cdndice", "data_cri_fmt": "14/12/2011 \u00e0s 14:54"}, "path": "/<a href='/wiki/carlo'>carlo<\/a>/"}}'''

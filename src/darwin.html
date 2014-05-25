@@ -1,0 +1,64 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"><!--
+
+############################################################
+Darwin : A live book telling the voyage of the beagle
+############################################################
+
+:Author: *Carlo E. T. Oliveira*
+:Contact: carlo@nce.ufrj.br
+:Date: 2014/05/24
+:Status: This is a "work in progress"
+:Home: `Labase <http://labase.selfip.org/>`__
+:Copyright: 2014, `GPL <http://is.gd/3Udt>`__.
+
+The voyages of Charles Darwin on board of the clipper Beagle.
+-->
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Os Caminhos de Charles Darwin</title>
+        <meta http-equiv="content-type" content="application/xml;charset=utf-8" />
+        <script type="text/javascript" src="../../lib/glow/brython_dist.js"></script>
+        <script type="text/javascript" src="../../lib/glow/jslibs/jquery-1.6.2.min.js"></script>
+        <script type="text/javascript" src="../../lib/glow/jslibs/glow.1.0.min.js"></script>
+        <script type="text/python" src="darwin.py"></script>
+        <script type="text/python">
+            from glow import *
+            from browser import html, doc
+            from javascript import JSObject
+            class GlowVisual:
+                def __init__(self):
+                    _gs=glow('glowscript')
+                    self.vec = vec
+                    self.scene=canvas()
+                    self.scene.width = 600
+                    self.scene.height = 600
+                    self.scene.forward = vec(-2, 0, 1)._vec
+                    self.gui = html
+                    self.doc = doc
+                    self.box = box
+                    self.pyramid = pyramid
+                    self.arrow = arrow
+                    self.cylinder = cylinder
+                    self.sphere = sphere
+                    self.cone = cone
+                    self.helix = helix
+                    self.curve = curve
+                    self.attach_trail = attach_trail
+                    self.compound = compound
+            main(GlowVisual(), vec, color)
+        </script>
+ </head>
+    <body onLoad="brython(1)">
+        <div id="man" style="float:left;overflow:hidden;height:40px;width:1200px;">
+            Clique nas bolas vermelhas para acompanhar a viagem do Beagle. A bola verde indica onde você está. Arraste com o botão direito para rolar o globo, role o botão central para aumentar e diminuir o globo.
+        </div>
+        <div id="glowscript" class="glowscript" style="float:left;"></div>
+        <div id="tit" style="float:left;overflow:hidden;height:20px;width:600px;">PLYMOUTH</div>
+        <div id="fig" style="float:left;overflow:hidden;height:200px;width:300px;"></div>
+        <div id="sce" style="float:left;overflow:hidden;height:200px;width:300px;"></div>
+
+        <div id="map" style="float:left;overflow:hidden;height:380px;width:600px;"></div>
+
+    </body>
+</html>
